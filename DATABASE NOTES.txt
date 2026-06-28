@@ -1,0 +1,99 @@
+DATABASE NOTES
+
+1. Stored Procedures vs Functions.
+
+Think of **Stored Procedures** and **Functions** as the two primary ways to bundle and execute code directly on your database server. While they look similar at first glance, they serve completely different purposes and have strict rules about what they can and cannot do.
+
+Here is a breakdown of how they stack up against each other.
+
+---
+
+## 1. The Core Difference: Purpose
+
+* **Stored Procedures** are designed to **execute business logic and perform actions**. They are built to modify data, run complex administrative tasks, and handle multi-step transactions.
+* **Functions** are designed to **calculate and return a value**. They are built to compute something based on input parameters and should not change the state of the database.
+
+---
+
+## 2. Key Differences at a Glance
+
+| Feature | Stored Procedure | Function |
+| --- | --- | --- |
+| **Primary Purpose** | To perform an action / execute business logic. | To compute and return a value. |
+| **Return Value** | Can return **zero, one, or multiple** values (via `OUT` parameters or result sets). | Must return **exactly one** value (a scalar or a table). |
+| **How it's called** | Called explicitly using `EXEC` or `CALL`. | Embedded directly inside SQL statements (e.g., `SELECT`, `WHERE`). |
+| **Data Modification (DML)** | Fully allowed (`INSERT`, `UPDATE`, `DELETE`). | Generally **not allowed** (must be read-only/deterministic). |
+| **Transaction Control** | Allowed to use `COMMIT` and `ROLLBACK`. | **Not allowed** to manage transactions. |
+| **Can it call the other?** | Yes, a procedure can call a function. | No, a function cannot call a procedure. |
+
+---
+
+## 3. When to Use Which?
+
+### Use a Stored Procedure when:
+
+* You need to insert, update, or delete data across multiple tables as a single batch.
+* You need to wrap your operations in a transaction so you can rollback if something fails.
+* You need to return multiple distinct pieces of data or entire data sets back to an application.
+
+**Example Scenario:** Processing an e-commerce order. You need to deduct inventory, create a billing record, update the user's status, and rollback everything if the payment fails.
+
+### Use a Function when:
+
+* You need to perform a repetitive calculation on data (e.g., calculating tax, formatting a string, or converting currencies).
+* You want to filter data dynamically inside a `WHERE` clause.
+
+**Example Scenario:** You want to quickly format phone numbers in a clean format every time you query your users table.
+
+---
+
+## 4. Code Syntax Examples (SQL Server / T-SQL)
+
+### Stored Procedure Example
+
+Notice how it performs an action (`UPDATE`) and doesn't use a standard `RETURN` statement for data.
+
+```sql
+CREATE PROCEDURE UpdateEmployeeSalary
+    @EmpId INT,
+    @BonusAmount DECIMAL(10,2)
+AS
+BEGIN
+    -- Procedures can modify data
+    UPDATE Employees 
+    SET Salary = Salary + @BonusAmount 
+    WHERE EmployeeID = @EmpId;
+END;
+
+-- To run it:
+EXEC UpdateEmployeeSalary @EmpId = 101, @BonusAmount = 500.00;
+
+```
+
+### Function Example
+
+Notice how it is strictly focused on computing a value and is used directly inside a standard query.
+
+```sql
+CREATE FUNCTION GetNetSalary
+    (@Salary DECIMAL(10,2), @TaxRate DECIMAL(4,2))
+RETURNS DECIMAL(10,2)
+AS
+BEGIN
+    -- Functions must return a value and cannot modify data
+    RETURN @Salary - (@Salary * @TaxRate);
+END;
+
+-- To run it:
+SELECT EmployeeID, dbo.GetNetSalary(Salary, 0.15) AS TakeHomePay 
+FROM Employees;
+
+```
+
+---
+
+## Summary Rule of Thumb
+
+If you need to **change** data or run a complex workflow, write a **Procedure**. If you just need to **calculate or format** data to look at it, write a **Function**.
+
+Which specific database system (like MySQL, PostgreSQL, or SQL Server) are you working with? The exact limitations on what a function can do can vary slightly between them.
