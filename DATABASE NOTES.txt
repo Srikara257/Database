@@ -97,3 +97,20 @@ FROM Employees;
 If you need to **change** data or run a complex workflow, write a **Procedure**. If you just need to **calculate or format** data to look at it, write a **Function**.
 
 Which specific database system (like MySQL, PostgreSQL, or SQL Server) are you working with? The exact limitations on what a function can do can vary slightly between them.
+
+
+
+2. The Need for Finding/Using ViewsViews
+
+Views were invented to save time, secure data, and hide the complexities of raw database architectures. 
+Key needs include:
+
+Simplifying Complex Queries: Developers often need to write complex JOIN statements and aggregations to get the data they need. A view allows a complex query to be saved as a 
+single virtual table, making future queries clean and readable.
+
+Enhancing Security: Rather than giving users full access to tables with sensitive information (e.g., salaries, passwords), you can create a view that only exposes non-sensitive data columns.
+
+Data Consistency: Instead of copying and pasting the same business logic or calculations into multiple applications or reports, a single view provides a "single source of truth."
+
+Logical Independence: If the underlying database schema changes (e.g., a column is renamed), database administrators can simply update the view definition. This prevents breaking external applications or reports that query the view.
+
